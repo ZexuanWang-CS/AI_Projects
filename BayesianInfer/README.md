@@ -1,0 +1,5 @@
+Copyright: 2018, Zexuan Wang && Haoning Hu
+
+File XML.py is the xml parser which reads a xml file and returns a Bayesian Network. File Enum_Infer.py, Rej_Samp.py, and Gibbs_Samp.py are the implementations of the algorithms. These files are executable in terminal by the command such as "python Enum_Infer.py aima-alarm.xml B J true M true”. The other files can be executed by "python Rej_Samp.py 1000 aima-alarm.xml B J true M true" where "1000" is the number of samples you want to use for the approximate inference algorithms. The output of the files is a dictionary like this "{'T':0.28,'F':0.72}", indicating the probability of the query variable being true is 0.28 and 0.72 for being false.
+
+Note: Notice that when you want to try rejection sampling on the file aima-alarm.xml, if you use samples less than 1000, say 1000, the result may be very unstable. This is because the probability of some variables is considerably as low as 0.001 or 0.002. If the number of samples is not large enough there will be very few samples in which these variables are true. I recommend using samples like 10000.

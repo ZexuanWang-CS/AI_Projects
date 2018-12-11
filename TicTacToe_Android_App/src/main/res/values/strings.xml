@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">TicTacToeAI</string>
+    <string name="basic_tic_tac_toe">"   "Basic Tic Tac Toe"   "</string>
+    <string name="advanced_tic_tac_toe">"   "Advanced Tic Tac Toe"   "</string>
+    <string name="about">"   "About"   "</string>
+    <string name="move_first_with_x">"   "Move first with X"   "</string>
+    <string name="move_second_with_o">"   "Move second with O"   "</string>
+    <string name="easy">"   "Easy"   "</string>
+    <string name="hard">"   "Hard"   "</string>
+    <string name="reset">Reset Game</string>
+</resources>
