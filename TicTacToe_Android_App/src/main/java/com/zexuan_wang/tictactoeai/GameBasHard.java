@@ -235,33 +235,33 @@ public class GameBasHard extends AppCompatActivity implements View.OnClickListen
                 CurrPlayer = HMPlayer;
                 ShowWin();
                 isAIPlayer = 1;
-            }
-            if (!hasWin) {
-                CurrPlayer = AIPlayer;
-                for (int pos = 0; pos < Freespot.size(); pos++) {
-                    Integer Freespot_ele = Freespot.get(pos);
-                    BoardButtons[(Freespot_ele - 1) / 3][(Freespot_ele - 1) % 3].setText(AIPlayer);
-                    Freespot = FreeSpot();
-                    isAIPlayer = -1;
-                    int score = MiniMax(false, alpha, beta);
-                    GameBoardRevert(Freespot_ele);
-                    Freespot = FreeSpot();
-                    isAIPlayer = 1;
-                    if (score == 1) {
-                        BoardButtons[(Freespot_ele - 1) / 3][(Freespot_ele - 1) % 3].setText(AIPlayer);
-                        isAIPlayer = -1;
-                        break;
-                    } else if (score == 0) {
-                        LastMove = Freespot_ele;
-                    }
-                }
-                if (isAIPlayer == 1) {
+                if (!hasWin) {
                     CurrPlayer = AIPlayer;
-                    PlaceMarker(LastMove);
+                    for (int pos = 0; pos < Freespot.size(); pos++) {
+                        Integer Freespot_ele = Freespot.get(pos);
+                        BoardButtons[(Freespot_ele - 1) / 3][(Freespot_ele - 1) % 3].setText(AIPlayer);
+                        Freespot = FreeSpot();
+                        isAIPlayer = -1;
+                        int score = MiniMax(false, alpha, beta);
+                        GameBoardRevert(Freespot_ele);
+                        Freespot = FreeSpot();
+                        isAIPlayer = 1;
+                        if (score == 1) {
+                            BoardButtons[(Freespot_ele - 1) / 3][(Freespot_ele - 1) % 3].setText(AIPlayer);
+                            isAIPlayer = -1;
+                            break;
+                        } else if (score == 0) {
+                            LastMove = Freespot_ele;
+                        }
+                    }
+                    if (isAIPlayer == 1) {
+                        CurrPlayer = AIPlayer;
+                        PlaceMarker(LastMove);
+                        isAIPlayer = -1;
+                    }
+                    ShowWin();
                     isAIPlayer = -1;
                 }
-                ShowWin();
-                isAIPlayer = -1;
             }
         }
     }

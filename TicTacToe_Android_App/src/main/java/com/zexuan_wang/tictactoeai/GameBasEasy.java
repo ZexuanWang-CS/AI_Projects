@@ -153,12 +153,6 @@ public class GameBasEasy extends AppCompatActivity implements View.OnClickListen
     @Override
     public void onClick(View v) {
         if (!hasWin) {
-            if (Freespot.size() == 1) {
-                CurrPlayer = HMPlayer;
-                PlaceMarker(Freespot.get(0));
-                mp.start();
-                ShowWin();
-            }
             if (((Button) v).getText().toString().contentEquals("")) {
                 ((Button) v).setText(HMPlayer);
                 mp.start();
