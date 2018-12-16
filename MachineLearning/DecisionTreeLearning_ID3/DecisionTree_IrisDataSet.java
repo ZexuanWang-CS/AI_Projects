@@ -32,10 +32,10 @@ public class DecisionTree_IrisDataSet {
 		DeciTree.Value.add("Iris-setosa");
 		DeciTree.Value.add("Iris-versicolor");
 		DeciTree.Value.add("Iris-virginica");
-		DeciTree.Iris = DeciTree.readIris("../DataSet/iris.data.discrete.txt");
+		DeciTree.Iris = DeciTree.readIris("./DataSet/iris.data.discrete.txt");
 		DeciTree.Root = DeciTree.DecisionTreeLearn(DeciTree.Iris, DeciTree.Attr, null, null, DeciTree.Iris);
 		int k = 0;
-		File fi = new File("../DecisionTree_Iris.txt");
+		File fi = new File("./DecisionTree_Iris.txt");
 		try (PrintWriter Pw = new PrintWriter(fi)) {
 			while (k < 50) {
 				Pw.println(DeciTree.kFoldCrosValid(DeciTree.Iris, 5));
@@ -50,7 +50,7 @@ public class DecisionTree_IrisDataSet {
 			CVerrorArr.add(DeciTree.kFoldCrosValid(DeciTree.Iris, i));
 			System.out.println(CVerrorArr.get(i-2));
 		}
-		File file = new File("../DecisionTree_Iris2.txt");
+		File file = new File("./DecisionTree_Iris2.txt");
 		try (PrintWriter pw = new PrintWriter(file)) {
 			for (Double CVerrorArr_ele : CVerrorArr) {
 				pw.println(CVerrorArr_ele);
@@ -59,7 +59,7 @@ public class DecisionTree_IrisDataSet {
 		catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
-		File File = new File("../DecisionTree_Iris3.txt");
+		File File = new File("./DecisionTree_Iris3.txt");
 		try (PrintWriter pW = new PrintWriter(File)) {
 			Collections.shuffle(DeciTree.Iris);
 			ArrayList<String[]> IrisTest = new ArrayList<String[]>();

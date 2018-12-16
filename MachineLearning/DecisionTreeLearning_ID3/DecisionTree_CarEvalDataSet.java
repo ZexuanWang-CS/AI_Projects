@@ -35,10 +35,10 @@ public class DecisionTree_CarEvalDataSet {
 		DeciTree.Value.add("acc");
 		DeciTree.Value.add("good");
 		DeciTree.Value.add("vgood");
-		DeciTree.CarEval = DeciTree.readCar("../DataSet/car.data.txt");
+		DeciTree.CarEval = DeciTree.readCar("./DataSet/car.data.txt");
 		DeciTree.Root = DeciTree.DecisionTreeLearn(DeciTree.CarEval, DeciTree.Attr, null, null, DeciTree.CarEval);
 		int k = 0;
-		File fi = new File("../DecisionTree_CarEval.txt");
+		File fi = new File("./DecisionTree_CarEval.txt");
 		try (PrintWriter Pw = new PrintWriter(fi)) {
 			while (k < 50) {
 				Pw.println(DeciTree.kFoldCrosValid(DeciTree.CarEval, 5));
@@ -53,7 +53,7 @@ public class DecisionTree_CarEvalDataSet {
 			CVerrorArr.add(DeciTree.kFoldCrosValid(DeciTree.CarEval, i));
 			System.out.println(CVerrorArr.get(CVerrorArr.size()-1));
 		}
-		File file = new File("../DecisionTree_CarEval2.txt");
+		File file = new File("./DecisionTree_CarEval2.txt");
 		try (PrintWriter pw = new PrintWriter(file)) {
 			for (Double CVerrorArr_ele : CVerrorArr) {
 				pw.println(CVerrorArr_ele);
@@ -62,7 +62,7 @@ public class DecisionTree_CarEvalDataSet {
 		catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
-		File File = new File("../DecisionTree_CarEval3.txt");
+		File File = new File("./DecisionTree_CarEval3.txt");
 		try (PrintWriter pW = new PrintWriter(File)) {
 			Collections.shuffle(DeciTree.CarEval);
 			ArrayList<String[]> CarEvalTest = new ArrayList<String[]>();

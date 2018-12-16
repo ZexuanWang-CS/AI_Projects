@@ -36,10 +36,10 @@ public class DecisionTree_TicTacToeDataSet {
 		DeciTree.Attr.add("B8");
 		DeciTree.Value.add("positive");
 		DeciTree.Value.add("negative");
-		DeciTree.TTT = DeciTree.readTTT("../DataSet/tic-tac-toe.data.txt");
+		DeciTree.TTT = DeciTree.readTTT("./DataSet/tic-tac-toe.data.txt");
 		DeciTree.Root = DeciTree.DecisionTreeLearn(DeciTree.TTT, DeciTree.Attr, null, null, DeciTree.TTT);
 		int k = 0;
-		File fi = new File("../DecisionTree_TicTacToe.txt");
+		File fi = new File("./DecisionTree_TicTacToe.txt");
 		try (PrintWriter Pw = new PrintWriter(fi)) {
 			while (k < 50) {
 				Pw.println(DeciTree.kFoldCrosValid(DeciTree.TTT, 5));
@@ -54,7 +54,7 @@ public class DecisionTree_TicTacToeDataSet {
 			CVerrorArr.add(DeciTree.kFoldCrosValid(DeciTree.TTT, i));
 			System.out.println(CVerrorArr.get(CVerrorArr.size()-1));
 		}
-		File file = new File("../DecisionTree_TicTacToe2.txt");
+		File file = new File("./DecisionTree_TicTacToe2.txt");
 		try (PrintWriter pw = new PrintWriter(file)) {
 			for (Double CVerrorArr_ele : CVerrorArr) {
 				pw.println(CVerrorArr_ele);
@@ -63,7 +63,7 @@ public class DecisionTree_TicTacToeDataSet {
 		catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
-		File File = new File("../DecisionTree_TicTacToe3.txt");
+		File File = new File("./DecisionTree_TicTacToe3.txt");
 		try (PrintWriter pW = new PrintWriter(File)) {
 			Collections.shuffle(DeciTree.TTT);
 			ArrayList<String[]> TTTTest = new ArrayList<String[]>();
