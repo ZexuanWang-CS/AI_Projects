@@ -1,9 +1,13 @@
 package com.zexuan_wang.tictactoeai;
 
 import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.media.MediaPlayer;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -34,6 +38,8 @@ public class GameAdvEasy extends AppCompatActivity implements View.OnClickListen
     public Random r = new Random();
     public MediaPlayer mp;
     public TextView AIloc;
+    public boolean AIturn = false;
+    public Handler handler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,11 +51,19 @@ public class GameAdvEasy extends AppCompatActivity implements View.OnClickListen
                 int resID = getResources().getIdentifier(butID, "id", getPackageName());
                 BoardButtons[i][j] = findViewById(resID);
                 BoardButtons[i][j].setOnClickListener(this);
+                BoardButtons[i][j].setTextColor(Color.BLACK);
+                BoardButtons[i][j].setGravity(Gravity.CENTER);
+                if ((i <= 2 && (j <= 2 || j >= 6)) || (i >= 3 && i <= 5 && j >= 3 && j <= 5) ||
+                        (i >= 6 && (j <= 2 || j >= 6))) {
+                    BoardButtons[i][j].setBackgroundResource(R.drawable.button_border1);
+                } else {
+                    BoardButtons[i][j].setBackgroundResource(R.drawable.button_border2);
+                }
             }
         }
-        AIloc = findViewById(R.id.plyAI);
+        AIloc = findViewById(R.id.plyAIloc);
         AIloc.setTextColor(-16777216);
-        Button resBut = (Button) findViewById(R.id.reset);
+        Button resBut = findViewById(R.id.reset);
         resBut.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -74,8 +88,8 @@ public class GameAdvEasy extends AppCompatActivity implements View.OnClickListen
         HMLastPlace[0] = -1;
         HMLastPlace[1] = -1;
         isAIPlayer = IsAIPlayer();
-        Checkscore = CheckScore(downDepth);
-        mp = MediaPlayer.create(GameAdvEasy.this, R.raw.soundclick1);
+        mp = MediaPlayer.create(GameAdvEasy.this, R.raw.butclic);
+        Freespot = FreeSpot();
         if (isAIPlayer == 1) {
             CurrPlayer = AIPlayer;
             int rand1 = r.nextInt(9) + 1;
@@ -84,12 +98,34 @@ public class GameAdvEasy extends AppCompatActivity implements View.OnClickListen
                 rand1 = r.nextInt(9) + 1;
                 rand2 = r.nextInt(9) + 1;
             }
-            Freespot = FreeSpot();
             PlaceMarker(rand1, rand2);
-            AIloc.setText("AI plays at [" + rand1 + ", " + rand2 + "]");
+            AIloc.setText("[" + rand1 + ", " + rand2 + "]");
             AILastPlace[1] = rand2;
             isAIPlayer = -1;
         }
+        handler = new Handler();
+        final Runnable run = new Runnable() {
+            @Override
+            public void run() {
+                if (!hasWin && AIturn) {
+                    mp.start();
+                    isAIPlayer = 1;
+                    CurrPlayer = AIPlayer;
+                    int rand2 = r.nextInt(9) + 1;
+                    while (!Freespot.get(HMLastPlace[1] - 1).contains(rand2)) {
+                        rand2 = r.nextInt(9) + 1;
+                    }
+                    PlaceMarker(HMLastPlace[1], rand2);
+                    AIloc.setText("[" + HMLastPlace[1] + ", " + rand2 + "]");
+                    AILastPlace[1] = rand2;
+                    ShowWin();
+                    isAIPlayer = -1;
+                }
+                AIturn = false;
+                handler.postDelayed(this, 500);
+            }
+        };
+        handler.postDelayed(run, 500);
     }
 
     public int IsAIPlayer() {
@@ -182,28 +218,33 @@ public class GameAdvEasy extends AppCompatActivity implements View.OnClickListen
         Checkscore = CheckScore(downDepth);
         if (Checkscore < -500 || Checkscore > 500 || FreespotSize == 0) {
             if (Checkscore > 500) {
-                Toast.makeText(GameAdvEasy.this, "AI Player Wins", Toast.LENGTH_LONG).show();
                 hasWin = true;
+                for (int i = 0; i < 3; i++) {
+                    Toast.makeText(GameAdvEasy.this, R.string.ai_player_wins, Toast.LENGTH_LONG).show();
+                }
             } else if (Checkscore < -500) {
-                Toast.makeText(GameAdvEasy.this, "Human Player Wins", Toast.LENGTH_LONG).show();
                 hasWin = true;
+                for (int i = 0; i < 3; i++) {
+                    Toast.makeText(GameAdvEasy.this, R.string.human_player_wins, Toast.LENGTH_LONG).show();
+                }
             } else {
-                Toast.makeText(GameAdvEasy.this, "Game Draws", Toast.LENGTH_LONG).show();
                 hasWin = true;
+                for (int i = 0; i < 3; i++) {
+                    Toast.makeText(GameAdvEasy.this, R.string.game_draws, Toast.LENGTH_LONG).show();
+                }
             }
         }
     }
 
     @Override
     public void onClick(View v) {
-        if (!hasWin) {
+        if (!hasWin && !AIturn) {
             boolean flag = false;
             if (AILastPlace[1] != -1) {
                 for (int i = 0; i < 9; i++) {
                     placeIndex = PlaceIndex(AILastPlace[1], i + 1);
-                    if ((BoardButtons[(placeIndex - 1) / 9][(placeIndex - 1) % 9].equals((Button) v)) && ((Button) v).getText().toString().contentEquals("")) {
+                    if ((BoardButtons[(placeIndex - 1) / 9][(placeIndex - 1) % 9].equals(v)) && ((Button) v).getText().toString().contentEquals("")) {
                         ((Button) v).setText(HMPlayer);
-                        mp.start();
                         HMLastPlace[1] = i + 1;
                         CurrPlayer = HMPlayer;
                         flag = true;
@@ -216,30 +257,18 @@ public class GameAdvEasy extends AppCompatActivity implements View.OnClickListen
                 }
             } else {
                 ((Button) v).setText(HMPlayer);
-                mp.start();
                 for (int i = 0; i < 9; i++) {
                     for (int j = 0; j < 9; j++) {
                         placeIndex = PlaceIndex(i + 1, j + 1);
-                        if (BoardButtons[(placeIndex - 1) / 9][(placeIndex - 1) % 9].equals((Button) v)) {
+                        if (BoardButtons[(placeIndex - 1) / 9][(placeIndex - 1) % 9].equals(v)) {
                             HMLastPlace[1] = j + 1;
                             CurrPlayer = HMPlayer;
+                            ShowWin();
                         }
                     }
                 }
             }
-            if (!hasWin) {
-                isAIPlayer = 1;
-                CurrPlayer = AIPlayer;
-                int rand2 = r.nextInt(9) + 1;
-                while (!Freespot.get(HMLastPlace[1] - 1).contains(rand2)) {
-                    rand2 = r.nextInt(9) + 1;
-                }
-                PlaceMarker(HMLastPlace[1], rand2);
-                AIloc.setText("AI plays at [" + HMLastPlace[1] + ", " + rand2 + "]");
-                AILastPlace[1] = rand2;
-                ShowWin();
-                isAIPlayer = -1;
-            }
+            AIturn = true;
         }
     }
 }

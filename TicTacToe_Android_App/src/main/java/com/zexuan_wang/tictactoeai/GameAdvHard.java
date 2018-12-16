@@ -1,9 +1,12 @@
 package com.zexuan_wang.tictactoeai;
 
 import android.content.Intent;
+import android.graphics.Color;
 import android.media.MediaPlayer;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -38,6 +41,8 @@ public class GameAdvHard extends AppCompatActivity implements View.OnClickListen
     public int beta = 1000;
     public MediaPlayer mp;
     public TextView AIloc;
+    public boolean AIturn = false;
+    public Handler handler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,11 +54,19 @@ public class GameAdvHard extends AppCompatActivity implements View.OnClickListen
                 int resID = getResources().getIdentifier(butID, "id", getPackageName());
                 BoardButtons[i][j] = findViewById(resID);
                 BoardButtons[i][j].setOnClickListener(this);
+                BoardButtons[i][j].setTextColor(Color.BLACK);
+                BoardButtons[i][j].setGravity(Gravity.CENTER);
+                if ((i <= 2 && (j <= 2 || j >= 6)) || (i >= 3 && i <= 5 && j >= 3 && j <= 5) ||
+                        (i >= 6 && (j <= 2 || j >= 6))) {
+                    BoardButtons[i][j].setBackgroundResource(R.drawable.button_border1);
+                } else {
+                    BoardButtons[i][j].setBackgroundResource(R.drawable.button_border2);
+                }
             }
         }
-        AIloc = findViewById(R.id.plyAI);
+        AIloc = findViewById(R.id.plyAIloc);
         AIloc.setTextColor(-16777216);
-        Button resBut = (Button) findViewById(R.id.reset);
+        Button resBut = findViewById(R.id.reset);
         resBut.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -78,17 +91,70 @@ public class GameAdvHard extends AppCompatActivity implements View.OnClickListen
         HMLastPlace[0] = -1;
         HMLastPlace[1] = -1;
         isAIPlayer = IsAIPlayer();
-        Checkscore = CheckScore();
-        mp = MediaPlayer.create(GameAdvHard.this, R.raw.soundclick1);
+        mp = MediaPlayer.create(GameAdvHard.this, R.raw.butclic);
+        Freespot = FreeSpot();
         if (isAIPlayer == 1) {
             CurrPlayer = AIPlayer;
-            Freespot = FreeSpot();
             PlaceMarker(5, 5);
-            AIloc.setText("AI plays at [" + 5 + ", " + 5 + "]");
+            AIloc.setText("[" + 5 + ", " + 5 + "]");
             AILastPlace[1] = 5;
             isAIPlayer = -1;
             MinmaxLastPlace[downDepth] = AILastPlace[1];
         }
+        handler = new Handler();
+        final Runnable r = new Runnable() {
+            public void run() {
+                if (!hasWin && AIturn) {
+                    isAIPlayer = 1;
+                    scoreList.clear();
+                    for (int i = 0; i < Freespot.get(HMLastPlace[1] - 1).size(); i++) {
+                        Integer Freespot_ele = Freespot.get(HMLastPlace[1] - 1).get(i);
+                        CurrPlayer = AIPlayer;
+                        PlaceMarker(HMLastPlace[1], Freespot_ele);
+                        AILastPlace[0] = HMLastPlace[1];
+                        AILastPlace[1] = Freespot_ele;
+                        MinmaxLastPlace[downDepth + 1] = HMLastPlace[1];
+                        MinmaxLastPlace[downDepth] = Freespot_ele;
+                        Freespot = FreeSpot();
+                        isAIPlayer = -1;
+                        score = MiniMax(false, downDepth, alpha, beta);
+                        if (score >= 500) {
+                            mp.start();
+                            CurrPlayer = AIPlayer;
+                            AILastPlace[0] = HMLastPlace[1];
+                            AILastPlace[1] = Freespot_ele;
+                            PlaceMarker(AILastPlace[0], AILastPlace[1]);
+                            AIloc.setText("[" + AILastPlace[0] + ", " + AILastPlace[1] + "]");
+                            FreeSpot();
+                            ShowWin();
+                            scoreList.clear();
+                            isAIPlayer = -1 * isAIPlayer;
+                            break;
+                        }
+                        scoreList.add(i, score);
+                        GameBoardRevert(HMLastPlace[1], Freespot_ele);
+                        Freespot = FreeSpot();
+                        isAIPlayer = -1 * isAIPlayer;
+                    }
+                    if (!scoreList.isEmpty()) {
+                        mp.start();
+                        CurrPlayer = AIPlayer;
+                        scoreListMaxInd = ScoreListMax(scoreList);
+                        AILastPlace[0] = HMLastPlace[1];
+                        AILastPlace[1] = Freespot.get(HMLastPlace[1] - 1).get(scoreListMaxInd);
+                        PlaceMarker(AILastPlace[0], AILastPlace[1]);
+                        AIloc.setText("[" + AILastPlace[0] + ", " + AILastPlace[1] + "]");
+                        FreeSpot();
+                        ShowWin();
+                        MinmaxLastPlace[downDepth] = AILastPlace[1];
+                        isAIPlayer = -1 * isAIPlayer;
+                    }
+                }
+                AIturn = false;
+                handler.postDelayed(this, 500);
+            }
+        };
+        handler.postDelayed(r, 500);
     }
 
     public int IsAIPlayer() {
@@ -296,28 +362,33 @@ public class GameAdvHard extends AppCompatActivity implements View.OnClickListen
         Checkscore = CheckScore();
         if (Checkscore < -500 || Checkscore > 500 || FreespotSize == 0) {
             if (Checkscore > 500) {
-                Toast.makeText(GameAdvHard.this, "AI Player Wins", Toast.LENGTH_LONG).show();
                 hasWin = true;
+                for (int i = 0; i < 3; i++) {
+                    Toast.makeText(GameAdvHard.this, R.string.ai_player_wins, Toast.LENGTH_LONG).show();
+                }
             } else if (Checkscore < -500) {
-                Toast.makeText(GameAdvHard.this, "Human Player Wins", Toast.LENGTH_LONG).show();
                 hasWin = true;
+                for (int i = 0; i < 3; i++) {
+                    Toast.makeText(GameAdvHard.this, R.string.human_player_wins, Toast.LENGTH_LONG).show();
+                }
             } else {
-                Toast.makeText(GameAdvHard.this, "Game Draws", Toast.LENGTH_LONG).show();
                 hasWin = true;
+                for (int i = 0; i < 3; i++) {
+                    Toast.makeText(GameAdvHard.this, R.string.game_draws, Toast.LENGTH_LONG).show();
+                }
             }
         }
     }
 
     @Override
     public void onClick(View v) {
-        if (!hasWin) {
+        if (!hasWin && !AIturn) {
             boolean flag = false;
             if (AILastPlace[1] != -1) {
                 for (int i = 0; i < 9; i++) {
                     placeIndex = PlaceIndex(AILastPlace[1], i + 1);
-                    if ((BoardButtons[(placeIndex - 1) / 9][(placeIndex - 1) % 9].equals((Button) v)) && ((Button) v).getText().toString().contentEquals("")) {
+                    if ((BoardButtons[(placeIndex - 1) / 9][(placeIndex - 1) % 9].equals(v)) && ((Button) v).getText().toString().contentEquals("")) {
                         ((Button) v).setText(HMPlayer);
-                        mp.start();
                         FreeSpot();
                         HMLastPlace[1] = i + 1;
                         CurrPlayer = HMPlayer;
@@ -331,62 +402,19 @@ public class GameAdvHard extends AppCompatActivity implements View.OnClickListen
                 }
             } else {
                 ((Button) v).setText(HMPlayer);
-                mp.start();
                 FreeSpot();
                 for (int i = 0; i < 9; i++) {
                     for (int j = 0; j < 9; j++) {
                         placeIndex = PlaceIndex(i + 1, j + 1);
-                        if (BoardButtons[(placeIndex - 1) / 9][(placeIndex - 1) % 9].equals((Button) v)) {
+                        if (BoardButtons[(placeIndex - 1) / 9][(placeIndex - 1) % 9].equals(v)) {
                             HMLastPlace[1] = j + 1;
                             CurrPlayer = HMPlayer;
+                            ShowWin();
                         }
                     }
                 }
             }
-            if (!hasWin) {
-                isAIPlayer = 1;
-                scoreList.clear();
-                for (int i = 0; i < Freespot.get(HMLastPlace[1] - 1).size(); i++) {
-                    Integer Freespot_ele = Freespot.get(HMLastPlace[1] - 1).get(i);
-                    CurrPlayer = AIPlayer;
-                    PlaceMarker(HMLastPlace[1], Freespot_ele);
-                    AILastPlace[0] = HMLastPlace[1];
-                    AILastPlace[1] = Freespot_ele;
-                    MinmaxLastPlace[downDepth + 1] = HMLastPlace[1];
-                    MinmaxLastPlace[downDepth] = Freespot_ele;
-                    Freespot = FreeSpot();
-                    isAIPlayer = -1;
-                    score = MiniMax(false, downDepth, alpha, beta);
-                    if (score >= 500) {
-                        CurrPlayer = AIPlayer;
-                        AILastPlace[0] = HMLastPlace[1];
-                        AILastPlace[1] = Freespot_ele;
-                        PlaceMarker(AILastPlace[0], AILastPlace[1]);
-                        AIloc.setText("AI plays at [" + AILastPlace[0] + ", " + AILastPlace[1] + "]");
-                        FreeSpot();
-                        ShowWin();
-                        scoreList.clear();
-                        isAIPlayer = -1 * isAIPlayer;
-                        break;
-                    }
-                    scoreList.add(i, score);
-                    GameBoardRevert(HMLastPlace[1], Freespot_ele);
-                    Freespot = FreeSpot();
-                    isAIPlayer = -1 * isAIPlayer;
-                }
-                if (!scoreList.isEmpty()) {
-                    CurrPlayer = AIPlayer;
-                    scoreListMaxInd = ScoreListMax(scoreList);
-                    AILastPlace[0] = HMLastPlace[1];
-                    AILastPlace[1] = Freespot.get(HMLastPlace[1] - 1).get(scoreListMaxInd);
-                    PlaceMarker(AILastPlace[0], AILastPlace[1]);
-                    AIloc.setText("AI plays at [" + AILastPlace[0] + ", " + AILastPlace[1] + "]");
-                    FreeSpot();
-                    ShowWin();
-                    MinmaxLastPlace[downDepth] = AILastPlace[1];
-                    isAIPlayer = -1 * isAIPlayer;
-                }
-            }
+            AIturn = true;
         }
     }
 }

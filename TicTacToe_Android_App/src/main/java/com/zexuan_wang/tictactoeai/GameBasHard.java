@@ -2,6 +2,7 @@ package com.zexuan_wang.tictactoeai;
 
 import android.content.Intent;
 import android.media.MediaPlayer;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -25,6 +26,8 @@ public class GameBasHard extends AppCompatActivity implements View.OnClickListen
     public int alpha = -1000;
     public int beta = 1000;
     public MediaPlayer mp;
+    public Handler handler;
+    public boolean AIturn = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,9 +39,14 @@ public class GameBasHard extends AppCompatActivity implements View.OnClickListen
                 int resID = getResources().getIdentifier(butID, "id", getPackageName());
                 BoardButtons[i][j] = findViewById(resID);
                 BoardButtons[i][j].setOnClickListener(this);
+                if (i % 2 == j % 2) {
+                    BoardButtons[i][j].setBackgroundResource(R.drawable.button_border1);
+                } else {
+                    BoardButtons[i][j].setBackgroundResource(R.drawable.button_border2);
+                }
             }
         }
-        Button resBut = (Button) findViewById(R.id.reset);
+        Button resBut = findViewById(R.id.reset);
         resBut.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -51,19 +59,51 @@ public class GameBasHard extends AppCompatActivity implements View.OnClickListen
                 startActivity(GameRestart);
             }
         });
-        Freespot = FreeSpot();
         isAIPlayer = IsAIPlayer();
-        Checkscore = CheckScore();
-        mp = MediaPlayer.create(GameBasHard.this, R.raw.soundclick1);
+        mp = MediaPlayer.create(GameBasHard.this, R.raw.butclic);
+        Freespot = FreeSpot();
         if (isAIPlayer == 1) {
             CurrPlayer = AIPlayer;
             PlaceMarker(5);
-            isAIPlayer = -1 * isAIPlayer;
-        } else if (isAIPlayer == -1) {
-            CurrPlayer = HMPlayer;
+            isAIPlayer = -1;
         }
-        Freespot = FreeSpot();
-        Checkscore = CheckScore();
+        handler = new Handler();
+        final Runnable r = new Runnable() {
+            @Override
+            public void run() {
+                if (!hasWin && AIturn) {
+                    CurrPlayer = AIPlayer;
+                    for (int pos = 0; pos < Freespot.size(); pos++) {
+                        Integer Freespot_ele = Freespot.get(pos);
+                        BoardButtons[(Freespot_ele - 1) / 3][(Freespot_ele - 1) % 3].setText(AIPlayer);
+                        Freespot = FreeSpot();
+                        isAIPlayer = -1;
+                        int score = MiniMax(false, alpha, beta);
+                        GameBoardRevert(Freespot_ele);
+                        Freespot = FreeSpot();
+                        isAIPlayer = 1;
+                        if (score == 1) {
+                            mp.start();
+                            BoardButtons[(Freespot_ele - 1) / 3][(Freespot_ele - 1) % 3].setText(AIPlayer);
+                            isAIPlayer = -1;
+                            break;
+                        } else if (score == 0) {
+                            LastMove = Freespot_ele;
+                        }
+                    }
+                    if (isAIPlayer == 1) {
+                        mp.start();
+                        CurrPlayer = AIPlayer;
+                        PlaceMarker(LastMove);
+                        isAIPlayer = -1;
+                    }
+                    ShowWin();
+                }
+                AIturn = false;
+                handler.postDelayed(this, 500);
+            }
+        };
+        handler.postDelayed(r, 500);
     }
 
     public int IsAIPlayer() {
@@ -94,12 +134,9 @@ public class GameBasHard extends AppCompatActivity implements View.OnClickListen
         BoardButtons[(Freespot_ele - 1) / 3][(Freespot_ele - 1) % 3].setText("");
     }
 
-    public boolean PlaceMarker(Integer place) {
+    public void PlaceMarker(Integer place) {
         if (Freespot.contains(place)) {
             BoardButtons[(place - 1) / 3][(place - 1) % 3].setText(CurrPlayer);
-            return true;
-        } else {
-            return false;
         }
     }
 
@@ -214,54 +251,33 @@ public class GameBasHard extends AppCompatActivity implements View.OnClickListen
         Checkscore = CheckScore();
         if (Checkscore != 0 || Freespot.isEmpty()) {
             if (Checkscore == 1) {
-                Toast.makeText(GameBasHard.this, "AI Player Wins", Toast.LENGTH_LONG).show();
                 hasWin = true;
+                for (int i = 0; i < 3; i++) {
+                    Toast.makeText(GameBasHard.this, R.string.ai_player_wins, Toast.LENGTH_LONG).show();
+                }
             } else if (Checkscore == -1) {
-                Toast.makeText(GameBasHard.this, "Human Player Wins", Toast.LENGTH_LONG).show();
                 hasWin = true;
+                for (int i = 0; i < 3; i++) {
+                    Toast.makeText(GameBasHard.this, R.string.human_player_wins, Toast.LENGTH_LONG).show();
+                }
             } else {
-                Toast.makeText(GameBasHard.this, "Game Draws", Toast.LENGTH_LONG).show();
                 hasWin = true;
+                for (int i = 0; i < 3; i++) {
+                    Toast.makeText(GameBasHard.this, R.string.game_draws, Toast.LENGTH_LONG).show();
+                }
             }
         }
     }
 
     @Override
     public void onClick(View v) {
-        if (!hasWin) {
+        if (!hasWin && !AIturn) {
             if (((Button) v).getText().toString().contentEquals("")) {
                 ((Button) v).setText(HMPlayer);
-                mp.start();
                 CurrPlayer = HMPlayer;
                 ShowWin();
+                AIturn = true;
                 isAIPlayer = 1;
-                if (!hasWin) {
-                    CurrPlayer = AIPlayer;
-                    for (int pos = 0; pos < Freespot.size(); pos++) {
-                        Integer Freespot_ele = Freespot.get(pos);
-                        BoardButtons[(Freespot_ele - 1) / 3][(Freespot_ele - 1) % 3].setText(AIPlayer);
-                        Freespot = FreeSpot();
-                        isAIPlayer = -1;
-                        int score = MiniMax(false, alpha, beta);
-                        GameBoardRevert(Freespot_ele);
-                        Freespot = FreeSpot();
-                        isAIPlayer = 1;
-                        if (score == 1) {
-                            BoardButtons[(Freespot_ele - 1) / 3][(Freespot_ele - 1) % 3].setText(AIPlayer);
-                            isAIPlayer = -1;
-                            break;
-                        } else if (score == 0) {
-                            LastMove = Freespot_ele;
-                        }
-                    }
-                    if (isAIPlayer == 1) {
-                        CurrPlayer = AIPlayer;
-                        PlaceMarker(LastMove);
-                        isAIPlayer = -1;
-                    }
-                    ShowWin();
-                    isAIPlayer = -1;
-                }
             }
         }
     }

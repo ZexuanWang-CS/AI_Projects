@@ -9,4 +9,7 @@
     <string name="easy">简单</string>
     <string name="hard">困难</string>
     <string name="reset">重置</string>
+    <string name="ai_player_wins">人工智能胜利</string>
+    <string name="human_player_wins">人类胜利</string>
+    <string name="game_draws">打平</string>
 </resources>

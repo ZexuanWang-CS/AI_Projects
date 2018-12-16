@@ -1,9 +1,12 @@
 package com.zexuan_wang.tictactoeai;
 
 import android.content.Intent;
+import android.graphics.Color;
 import android.media.MediaPlayer;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
@@ -24,6 +27,8 @@ public class GameBasEasy extends AppCompatActivity implements View.OnClickListen
     public boolean hasWin = false;
     public Random r = new Random();
     public MediaPlayer mp;
+    public Handler handler;
+    public boolean AIturn = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,9 +40,16 @@ public class GameBasEasy extends AppCompatActivity implements View.OnClickListen
                 int resID = getResources().getIdentifier(butID, "id", getPackageName());
                 BoardButtons[i][j] = findViewById(resID);
                 BoardButtons[i][j].setOnClickListener(this);
+                BoardButtons[i][j].setTextColor(Color.BLACK);
+                BoardButtons[i][j].setGravity(Gravity.CENTER);
+                if (i % 2 == j % 2) {
+                    BoardButtons[i][j].setBackgroundResource(R.drawable.button_border1);
+                } else {
+                    BoardButtons[i][j].setBackgroundResource(R.drawable.button_border2);
+                }
             }
         }
-        Button resBut = (Button) findViewById(R.id.reset);
+        Button resBut = findViewById(R.id.reset);
         resBut.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -50,10 +62,9 @@ public class GameBasEasy extends AppCompatActivity implements View.OnClickListen
                 startActivity(GameRestart);
             }
         });
-        Freespot = FreeSpot();
         isAIPlayer = IsAIPlayer();
-        Checkscore = CheckScore();
-        mp = MediaPlayer.create(GameBasEasy.this, R.raw.soundclick2);
+        mp = MediaPlayer.create(GameBasEasy.this, R.raw.butclic);
+        Freespot = FreeSpot();
         if (isAIPlayer == 1) {
             CurrPlayer = AIPlayer;
             int rand = r.nextInt(9) + 1;
@@ -63,6 +74,27 @@ public class GameBasEasy extends AppCompatActivity implements View.OnClickListen
             PlaceMarker(rand);
             isAIPlayer = -1;
         }
+        handler = new Handler();
+        final Runnable run = new Runnable() {
+            @Override
+            public void run() {
+                if (!hasWin && AIturn) {
+                    mp.start();
+                    isAIPlayer = 1;
+                    CurrPlayer = AIPlayer;
+                    int rand = r.nextInt(9) + 1;
+                    while (!Freespot.contains(rand)) {
+                        rand = r.nextInt(9) + 1;
+                    }
+                    PlaceMarker(rand);
+                    ShowWin();
+                    isAIPlayer = -1;
+                }
+                AIturn = false;
+                handler.postDelayed(this, 500);
+            }
+        };
+        handler.postDelayed(run, 500);
     }
 
     public int IsAIPlayer() {
@@ -89,12 +121,9 @@ public class GameBasEasy extends AppCompatActivity implements View.OnClickListen
         return Freespot;
     }
 
-    public boolean PlaceMarker(Integer place) {
+    public void PlaceMarker(Integer place) {
         if (Freespot.contains(place)) {
             BoardButtons[(place - 1) / 3][(place - 1) % 3].setText(CurrPlayer);
-            return true;
-        } else {
-            return false;
         }
     }
 
@@ -138,37 +167,33 @@ public class GameBasEasy extends AppCompatActivity implements View.OnClickListen
         Checkscore = CheckScore();
         if (Checkscore != 0 || Freespot.isEmpty()) {
             if (Checkscore == 1) {
-                Toast.makeText(GameBasEasy.this, "AI Player Wins", Toast.LENGTH_LONG).show();
                 hasWin = true;
+                for (int i = 0; i < 3; i++) {
+                    Toast.makeText(GameBasEasy.this, R.string.ai_player_wins, Toast.LENGTH_LONG).show();
+                }
             } else if (Checkscore == -1) {
-                Toast.makeText(GameBasEasy.this, "Human Player Wins", Toast.LENGTH_LONG).show();
                 hasWin = true;
+                for (int i = 0; i < 3; i++) {
+                    Toast.makeText(GameBasEasy.this, R.string.human_player_wins, Toast.LENGTH_LONG).show();
+                }
             } else {
-                Toast.makeText(GameBasEasy.this, "Game Draws", Toast.LENGTH_LONG).show();
                 hasWin = true;
+                for (int i = 0; i < 3; i++) {
+                    Toast.makeText(GameBasEasy.this, R.string.game_draws, Toast.LENGTH_LONG).show();
+                }
             }
         }
     }
 
     @Override
     public void onClick(View v) {
-        if (!hasWin) {
+        if (!hasWin && !AIturn) {
             if (((Button) v).getText().toString().contentEquals("")) {
                 ((Button) v).setText(HMPlayer);
-                mp.start();
                 CurrPlayer = HMPlayer;
                 ShowWin();
-                if (!hasWin) {
-                    isAIPlayer = 1;
-                    CurrPlayer = AIPlayer;
-                    int rand = r.nextInt(9) + 1;
-                    while (!Freespot.contains(rand)) {
-                        rand = r.nextInt(9) + 1;
-                    }
-                    PlaceMarker(rand);
-                    ShowWin();
-                    isAIPlayer = -1;
-                }
+                AIturn = true;
+                isAIPlayer = 1;
             }
         }
     }

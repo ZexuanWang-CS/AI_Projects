@@ -8,4 +8,7 @@
     <string name="easy">"   "Easy"   "</string>
     <string name="hard">"   "Hard"   "</string>
     <string name="reset">Reset Game</string>
+    <string name="ai_player_wins">AI Player Wins</string>
+    <string name="human_player_wins">Human Player Wins</string>
+    <string name="game_draws">Game Draws</string>
 </resources>
