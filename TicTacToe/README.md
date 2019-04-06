@@ -1,7 +1,5 @@
 Copyright: 2018, Zexuan Wang
 
-Collaborators: None
-
 Build processes:
 1. You will use the javac command to convert this Java program into a form more amenable for execution on a computer. And you will use the java command to execute this program.
 2. In the terminal, type in “javac filename" to generate the compiled class files.
